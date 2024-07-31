@@ -1,72 +1,102 @@
-package Stanford.Assignment;
 import java.util.*;
 
 public class TopologicalSort {
+    private int vertices; // Number of vertices
+    private LinkedList<Integer>[] adjList; // Adjacency list
+    private int[] inDegree; // Array to store in-degrees of vertices
 
-    // Function to perform DFS and topological sorting
-    static void topologicalSortUtil(int v, List<List<Integer> > adj,
-                        boolean[] visited,
-                        Stack<Integer> stack)
-    {
-        // Mark the current node as visited
-        visited[v] = true;
-
-        // Recur for all adjacent vertices
-        for (int i : adj.get(v)) {
-            if (!visited[i])
-                topologicalSortUtil(i, adj, visited, stack);
-        }
-
-        // Push current vertex to stack which stores the
-        // result
-        stack.push(v);
-    }
-
-    // Function to perform Topological Sort
-    static void topologicalSort(List<List<Integer> > adj,
-                                int V)
-    {
-        // Stack to store the result
-        Stack<Integer> stack = new Stack<>();
-        boolean[] visited = new boolean[V];
-
-        // Topological Sort starting from all vertices one by one
-        for (int i = 0; i < V; i++) {
-            if (!visited[i])
-                topologicalSortUtil(i, adj, visited, stack);
-        }
-
-        // Print contents of stack
-        System.out.print(
-            "Topological sorting of the graph: \n");
-        while (!stack.empty()) {
-            System.out.print(stack.pop() + " ");
+    // Constructor
+    TopologicalSort(int v) {
+        vertices = v;
+        adjList = new LinkedList[v];
+        inDegree = new int[v];
+        for (int i = 0; i < v; ++i) {
+            adjList[i] = new LinkedList<>();
+            inDegree[i] = 0;
         }
     }
 
-    // Driver code
-    public static void main(String[] args)
-    {
-        // Number of nodes
-        int V = 4;
+    // Function to add an edge into the graph
+    void addEdge(int v, int w) {
+        adjList[v].add(w);
+        inDegree[w]++;
+    }
 
-        // Edges
-        List<List<Integer> > edges = new ArrayList<>();
-        edges.add(Arrays.asList(0, 1));
-        edges.add(Arrays.asList(1, 2));
-        edges.add(Arrays.asList(3, 1));
-        edges.add(Arrays.asList(3, 2));
+    // Function to print all topological sorts
+    void allTopologicalSorts() {
+        boolean[] visited = new boolean[vertices];
+        LinkedList<Integer> stack = new LinkedList<>();
 
-        // Graph represented as an adjacency list
-        List<List<Integer> > adj = new ArrayList<>(V);
-        for (int i = 0; i < V; i++) {
-            adj.add(new ArrayList<>());
+        allTopologicalSortsUtil(visited, stack);
+    }
+
+    // Recursive utility function for topological sort
+    private void allTopologicalSortsUtil(boolean[] visited, LinkedList<Integer> stack) {
+        boolean flag = false;
+
+        for (int i = 0; i < vertices; i++) {
+            if (!visited[i] && inDegree[i] == 0) {
+                for (int adj : adjList[i]) {
+                    inDegree[adj]--;
+                }
+
+                stack.add(i);
+                visited[i] = true;
+                allTopologicalSortsUtil(visited, stack);
+
+                visited[i] = false;
+                stack.removeLast();
+                for (int adj : adjList[i]) {
+                    inDegree[adj]++;
+                }
+
+                flag = true;
+            }
         }
 
-        for (List<Integer> i : edges) {
-            adj.get(i.get(0)).add(i.get(1));
+        if (!flag) {
+            stack.forEach(v -> System.out.print(v + " "));
+            System.out.println();
+        }
+    }
+
+    // Function to print all incoming edges of nodes
+    void printIncomingEdges() {
+        for (int i = 0; i < vertices; i++) {
+            System.out.print("Node " + i + ": ");
+            for (int j = 0; j < vertices; j++) {
+                if (adjList[j].contains(i)) {
+                    System.out.print(j + " ");
+                }
+            }
+            System.out.println();
+        }
+    }
+
+    public static void main(String args[]) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Enter the number of vertices:");
+        int V = scanner.nextInt();
+
+        System.out.println("Enter the number of edges:");
+        int E = scanner.nextInt();
+
+        TopologicalSort graph = new TopologicalSort(V);
+
+        System.out.println("Enter the edges (source destination):");
+        for (int i = 0; i < E; i++) {
+            int v = scanner.nextInt();
+            int w = scanner.nextInt();
+            graph.addEdge(v, w);
         }
 
-        topologicalSort(adj, V);
+        System.out.println("All Topological Sorts:");
+        graph.allTopologicalSorts();
+
+        System.out.println("Incoming Edges of Nodes:");
+        graph.printIncomingEdges();
+
+        scanner.close();
     }
 }
